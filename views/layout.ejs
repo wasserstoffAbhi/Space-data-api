@@ -1,0 +1,14 @@
+<!-- for entry point expressEjs layout and having header for all pages and include body on the basis of render -->
+<html>
+  <head>
+    <title><%= title%></title>
+    <link rel="stylesheet" href="/css/layout.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+    <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script> -->
+    <%- style %>
+  </head>
+  <body>
+    <main class="main"><%- body %></main>
+  </body>
+  <%- script %>
+</html>

@@ -1,0 +1,31 @@
+body {
+  background-color: #c4c4d4;
+  color: aliceblue;
+}
+.main {
+  width: 70%;
+  /* background-color: #db7f7f; */
+  margin-left: 15%;
+  height: 90%;
+  margin-top: 40px;
+}
+a {
+  text-decoration: none;
+}
+
+.button {
+  background-color: #0c0032;
+  font-weight: 600;
+  position: relative;
+  outline: none;
+  border-radius: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  height: 45px;
+  width: 130px;
+  opacity: 1;
+  color: aliceblue;
+  margin-left: 60px;
+}

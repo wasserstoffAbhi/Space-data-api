@@ -1,0 +1,163 @@
+<link rel="stylesheet" href="/css/home.css" />
+<link rel="stylesheet" href="/css/sideBar.css" />
+<div>
+  <div class="sidebar">
+    <h3>Launch Success</h3>
+    <input type="radio" name="launch_success" value="true">true<br>
+    <input type="radio" name="launch_success" value="false">false<br>
+    <input type="radio" name="launch_success" value="null">null<br>
+  
+    <h3>Launch Year</h3>
+    <input type="checkbox" name="launch_year" value="2005">2005<br>
+    <input type="checkbox" name="launch_year" value="2006">2006<br>
+    <input type="checkbox" name="launch_year" value="2007">2007<br>
+
+    <button id="resetFilters">Reset</button>
+  </div>
+  <div class="container"></div>
+  <ul class="pagination text-center"></ul>
+</div>
+
+
+<script>
+
+  $('#resetFilters').click(async function() {
+    // Reset the selected values array and clear the filters
+    selectedValues = {};
+    $('input[type=radio]').prop('checked', false);
+    $('input[type=checkbox]').prop('checked', false);
+
+    // Do an API call to fetch the initial data
+    const response = await fetch("/filter");
+    const data = await response.json();
+    renderLaunchData(data.launchData,data.current,data.pages);
+  });
+
+  $(document).on('click', '.pagination li a', async function(e) {
+    e.preventDefault();
+    const page = $(this).attr('href').split('p=')[1];
+    console.log(page)
+    const response = await fetch(`/filter?p=${page}`);
+    const data = await response.json();
+    renderLaunchData(data.launchData, data.current, data.pages);
+  });
+
+  const renderLaunchData = (launchData,current,pages) => {
+    let markup = '';
+    launchData.forEach((object, index) => {
+      markup += `
+        <div>
+          <div><img src=${object.links.mission_patch}></div>
+          <div style="background-color: #f9f9f9;">
+            <div>${object.flight_number}</div>
+            <div>${object.mission_name}</div>
+          </div>
+        </div>
+      `;
+    });
+    
+    $('.container').html(markup);
+
+    // Render pagination
+    if (pages >= 0 && launchData.length >0) {
+      let paginationMarkup = '';
+      if (current == 1) {
+        paginationMarkup += '<li class="disabled"><a>First</a></li>';
+      } else {
+        paginationMarkup += '<li><a href="/filter?p=1">First</a></li>';
+      }
+
+      let i = (Number(current) > 5 ? Number(current) - 4 : 1);
+      if (i !== 1) {
+        paginationMarkup += '<li class="disabled"><a>...</a></li>';
+      }
+
+      for (; i <= (Number(current) + 4) && i <= pages; i++) {
+        if (i == current) {
+          paginationMarkup += `<li class="active"><a>${i}</a></li>`;
+        } else {
+          paginationMarkup += `<li><a href="/filter?p=${i}">${i}</a></li>`;
+        }
+
+        if (i == Number(current) + 4 && i < pages) {
+          paginationMarkup += '<li class="disabled"><a>...</a></li>';
+        }
+      }
+
+      if (current == pages) {
+        paginationMarkup += '<li class="disabled"><a>Last</a></li>';
+      } else {
+        paginationMarkup += `<li><a href="/filter?p=${pages}">Last</a></li>`;
+      }
+
+      $('.pagination').html(paginationMarkup);
+    }else{
+      let paginationMarkup=`No result Found`;
+      $('.pagination').html(paginationMarkup);
+    }
+  };
+
+  $(document).ready(async function() {
+    // Initialize the selected values array
+    var selectedValues = {};
+
+    // Handle radio button changes
+    $('input[type=radio]').change(async function() {
+      var name = $(this).attr('name');
+      var value = $(this).val();
+      selectedValues[name] = value;
+
+      //api call with selected Values
+      await applyFilters(selectedValues);
+    });
+
+    // Handle checkbox changes
+    $('input[type=checkbox]').change(async function() {
+      var name = $(this).attr('name');
+      var value = $(this).val();
+
+      // Store the selected value in the array
+      if (selectedValues[name]) {
+        if (!selectedValues[name].includes(value)) selectedValues[name].push(value);
+        else {
+          const index = selectedValues[name].indexOf(value);
+          if (index > -1) {
+            selectedValues[name].splice(index, 1);
+          }
+          if (selectedValues[name].length <= 0) {
+            delete selectedValues[name];
+          }
+        }
+      } else selectedValues[name] = [value];
+
+      // Do an API call with the updated values
+      await applyFilters(selectedValues);
+    });
+
+    const applyFilters = async (filterValue) => {
+      let query = { $and: [] };
+      for (let key in filterValue) {
+        const value = filterValue[key];
+        let body = {};
+        body[key] = "";
+        if (typeof value == "object") {
+          body[key] = { $in: value };
+        } else {
+          body[key] = value;
+        }
+        query["$and"].push(body);
+      }
+      if (query["$and"].length <= 0) query = {};
+      query = JSON.stringify(query);
+      const response=await fetch(`/filter?f=${query}`)
+      const data = await response.json();
+      console.log(data);
+      renderLaunchData(data.launchData,data.current,data.pages);
+    };
+
+    // On page load, fetch the initial data
+    const response = await fetch("/filter");
+    const data = await response.json();
+    renderLaunchData(data.launchData,data.current,data.pages);
+  });
+</script>
